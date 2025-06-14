@@ -1,0 +1,14 @@
+{
+  "name": "patrick-collins-js-course",
+  "version": "1.0.0",
+  "description": "Patrick Collins JavaScript Course",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [
+    "javascript",
+    "course",
+    "patrick collins"
+  ],
+  "author": "",
+  "license": "MIT"
+}
