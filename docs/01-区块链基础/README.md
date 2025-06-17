@@ -217,6 +217,7 @@ NFT 代表"非同质化代币"，它在某种程度上是一种电子艺术品�
 #### 测试币获取
 - [Alchemy Faucet (Amoy)](https://sepoliafaucet.com)
 - [Faucets](https://faucets.chain.link/sepolia)
+- [Google Cloud Web3](https://cloud.google.com/application/web3/faucet/ethereum/sepolia)
 
 ## Gas 费用机制
 
