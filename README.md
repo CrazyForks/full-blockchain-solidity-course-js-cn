@@ -6,7 +6,8 @@
 
 ## 课程内容
 
-- [01-区块链基础](./docs/01-区块链基础/README.md) - 区块链核心概念、Gas 机制、共识原理等基础知识
+- [01-区块链基础](./docs/01-区块链基础/README.md) - 区块链核心概念、Gas 机制、共识原理等基础知识4
+- [02-Solidity基础](./docs/02-solidity基础/README.md) - Solidity 基础类型、函数、Mappings
 
 ## 黑客松资源
 
