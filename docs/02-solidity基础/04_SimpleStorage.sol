@@ -7,13 +7,12 @@ contract SimpleStorage {
         string name;
     }
 
-    // People public person01 = People({favoriteNumber: 2, name: "John"});
-    // People public person02 = People({favoriteNumber: 3, name: "Jane"});
-
     People[] public people;
 
+    mapping(string => uint256) public nameToFavoriteNumber;
+
     function addPerson(string memory _name, uint256 _favoriteNumber) public {
-        // people.push(People({favoriteNumber: _favoriteNumber, name: _name}));
         people.push(People(_favoriteNumber, _name));
+        nameToFavoriteNumber[_name] = _favoriteNumber;
     }
 }

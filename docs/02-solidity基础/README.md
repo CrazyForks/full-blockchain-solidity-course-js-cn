@@ -186,3 +186,103 @@ pure 函数也不允许修改状态，但是 pure 也不允许读取区块链数
 
 ## 数据和结构体
 
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+contract SimpleStorage {
+    struct People {
+        uint256 favoriteNumber;
+        string name;
+    }
+
+    // People public person01 = People({favoriteNumber: 2, name: "John"});
+    // People public person02 = People({favoriteNumber: 3, name: "Jane"});
+
+    People[] public people;
+}
+```
+
+上面这种类型的数据就是动态数组，因为我们在初始化的时候并没有规定它的大小。
+
+```solidity
+People[3] public people;
+```
+
+这种写法意味着数组只能放进去 3 个 People 对象。如果不设定大小表示可以是任意大小，并且数组的大小会随着我们添加和减少 People 增大或减小面积。
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+contract SimpleStorage {
+    struct People {
+        uint256 favoriteNumber;
+        string name;
+    }
+
+    // People public person01 = People({favoriteNumber: 2, name: "John"});
+    // People public person02 = People({favoriteNumber: 3, name: "Jane"});
+
+    People[] public people;
+
+    function addPerson(string memory _name, uint256 _favoriteNumber) public {
+        // people.push(People({favoriteNumber: _favoriteNumber, name: _name}));
+        people.push(People(_favoriteNumber, _name));
+    }
+}
+```
+
+函数参数的位置必须是 “storage”，“memory” 或者 “calldata”。
+
+> 代码警告不会阻止你的代码进行编译，它们通常会提供关于如何改进你的智能合约非常有见地的信息
+
+## Memory、Storage、calldata
+
+目前，在 Solidity 中有 6 种方式可以存储数据：Stack、Memory、Storage、CallData、Code、Logs。
+
+calldata 和 memory 意味着这个变量只是暂时存在。
+storge 存在于正在执行的函数之外，例如我们在全局声明变量，就会自动分配为一个存储变量。
+
+calldata 是不能被修改的临时变量，memory 是可以被修改的临时变量，storage 是可以被修改的永久变量。
+
+尽量我们说有 6 种方式可以让我们访问和存储信息，但我们不能说一个变量是 Stack、Code 或 Logs。
+
+```solidity
+function addPerson(string memory _name, uint256 _favoriteNumber) public {
+    // people.push(People({favoriteNumber: _favoriteNumber, name: _name}));
+    people.push(People(_favoriteNumber, _name));
+}
+```
+
+uint256 不需要显示声明，solidity 可以自动推断其所在位置，对于这个变量，仅仅存在于内存中。
+
+strin 其实上是有点复杂的，从背后远离来说，一个 string 实际上是一个 bytes 数组。由于 string 是数组，所以我们需要添加 memory 关键字。需要让 solidity 知道，数组、结构或映射的数据位置。
+
+函数形参不能声明为 storage，变量实际并没有存储到任何地方。
+
+## Mappings
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+contract SimpleStorage {
+    struct People {
+        uint256 favoriteNumber;
+        string name;
+    }
+
+    People[] public people;
+
+    mapping(string => uint256) public nameToFavoriteNumber;
+
+    function addPerson(string memory _name, uint256 _favoriteNumber) public {
+        people.push(People(_favoriteNumber, _name));
+        nameToFavoriteNumber[_name] = _favoriteNumber;
+    }
+}
+```
+
+## 部署合约
+
