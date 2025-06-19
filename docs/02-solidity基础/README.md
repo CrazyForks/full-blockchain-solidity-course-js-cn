@@ -2,7 +2,7 @@
 
 [Remix](https://remix.ethereum.org/)
 
-## 第一个智能合约
+## 第一个智能合约（contract）
 
 在任何一个 Solidity 智能合约中，你首先需要的就是 Solidity 的使用版本，它应该被标注到 Solidity 代码的最上面。
 
@@ -285,4 +285,23 @@ contract SimpleStorage {
 ```
 
 ## 部署合约
+
+Remix 选择 WalletConnect 使用你的账户进行部署。
+
+选择测试网进行部署，也需要消耗 gas，记得通过水龙头领取。
+
+> https://sepolia.etherscan.io/tx/0xeb43ee1f51b99be6b0091223e7b7ae3a7addc5efc2f5473d869487f1f735efa5
+
+把合约部署到链上需要消耗 gas，部署合约消耗的 gas 远比发送一笔交易所需的 gas 多。
+
+> 0x628a66bbD6592d1f07A909088A9F38D6fa04bbD1
+> https://sepolia.etherscan.io/address/0x628a66bbD6592d1f07A909088A9F38D6fa04bbD1
+
+## 总结
+
+Remix 点击编译时，我们写下的代码，它是在 EVM（以太坊虚拟机：Ethereum Virtual Machine） 上编译的。
+
+EVM 是以太坊区块链上部署智能合约的一个标准，并且任何实现某种 EVM 的区块链，你都可以把 solidity 代码部署上去。比如 Avalanche、Fantom、Polygon，它们是与 EVM 兼容的。
+
+solidity 种的合约（contract）就类似于其他编程中语言中的类（class），花括号里的所有内容都是该合约的组成部分。
 
