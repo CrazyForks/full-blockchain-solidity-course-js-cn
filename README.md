@@ -1,10 +1,10 @@
-# Patrick Collins JavaScript 课程
+# 区块链 Solidity 全栈课程
 
-## 课程简介
+## 简介
 
-本课程基于 Patrick Collins 的 JavaScript 区块链开发课程，旨在帮助开发者掌握区块链、Solidity 和全栈 Web3 开发技能。课程内容涵盖从区块链基础到智能合约开发的完整知识体系。
+基于 **Patrick Collins** 的 **JavaScript** 区块链开发课程，旨在帮助开发者掌握区块链、**Solidity** 和全栈 Web3 开发技能。课程内容涵盖从区块链基础到智能合约开发的完整知识体系。
 
-## 课程内容
+## 内容
 
 - [01-区块链基础](./docs/01-区块链基础/README.md) - 区块链核心概念、Gas 机制、共识原理等基础知识4
 - [02-Solidity基础](./docs/02-solidity基础/README.md) - Solidity 基础类型、函数、Mappings
