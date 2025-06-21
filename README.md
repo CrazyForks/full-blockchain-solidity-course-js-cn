@@ -17,6 +17,11 @@
 - [Alchemy Faucet (Amoy)](https://sepoliafaucet.com)
 - [Faucets](https://faucets.chain.link/sepolia)
 
+## 相关工具
+
+[以太坊单位转换器](https://eth-converter.com)
+- [remix-desktop-insiders](https://github.com/remix-project-org/remix-desktop-insiders/releases/tag/v1.0.8-insiders) - Remix 桌面版本 下载地址
+
 ## 黑客松
 
 - Chainlink - 去中心化预言机网络
