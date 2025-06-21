@@ -10,6 +10,7 @@
 - [02-Solidity基础](./docs/02-solidity基础/README.md) - Solidity 基础类型、函数、Mappings
 - [03-Storage Factory](./docs/03-storage_factory/README.md) - Remix 部署 Storage Factory
 - [04-FundMe合约](/docs/04-FundMe合约/README.md) - Remix 部署 FundMe合约、Solidity 进阶知识
+- [05-SimleStoage Ether](/docs/05-SimpleStorage_Ether/README.md) - Ether.js 实现 SimpleStorage
 
 ## 水龙头
 

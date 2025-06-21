@@ -871,3 +871,171 @@ function withdraw() public onlyOwner {
 这个函数声明的 onlyOwner 会在执行 withdraw 代码之前执行。
 
 现在我们已经实现了 FundMe 的所有功能，可以在测试网运行了。
+
+## Solidity 进阶 - Immutable & Constant
+
+有两个关键字可以使你的变量不能被改变，这些关键字就是 constant（变量）和 immutable（不可变的），你可以从 Solidity 文档中了解更多关于它们的信息。
+
+如果你只是在函数外分配一次变量，然后永远都不再改变它，如果是在编译时分配的，你就可以继续添加这个 constant 关键字。
+
+```solidity
+// 最小转账金额 50 USD
+uint256 public constant MINIMUM_USD = 50 * 1e18;
+```
+
+当你添加 constant 关键字后，这个 MINIMUM_USD 不再占用一个存储空间，而且更容易被读。部署合约时，也会更加节省 gas。
+
+这种 Gas 的差异可能不会有太大影响，但是像以太坊网络这样更昂贵的链上，这将会产生很大的差异。
+
+```solidity
+// 合约拥有者
+address public immutable i_owner;
+
+constructor() {
+    i_owner = msg.sender;
+}
+```
+
+像 owner 这种需要被一次性的设置，但在被声明的同一行之外，如果我们在构造函数中设置它们，我们可以将其标记为 immutable 不可变的。
+
+通常，一个好的 immutable 变量命令约定，需要使用 i_* 的格式命名。这样我们就知道这些都是不可变的变量。
+
+immutable 声明的变量也有非常类似 constant 关键字节省 Gas 的效果。
+
+当涉及到存储变量，这两种方式节省 Gas 的原因是，我们并不是把这些变量存储在一个存储槽里面，而是直接把它们存储到合约的字节码中。
+
+## Solidity 进阶 - Custom Error
+
+小的 Gas 效率改进，将是贯穿整个课程的概念之一。
+
+```solidity
+require(msg.sender == i_owner, unicode"你不是合约拥有者");
+```
+
+目前，require 语句必须要把 “你不是合约拥有者” 存储为一个 string 字符串数组。
+这个错误日志中的每一个字符都需要单独被存储，尽管它不是很大，但比我们能做到的替代方案大很多。
+
+从 Solidity v0.8.4 版本开始，你可以使用自定义错误。对于我们的 revert 来说，我们可以在顶部声明它们。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+import {PriceConvertor} from "./PriceConvertor.sol";
+
+error FundMe__NotOwner();
+
+contract FundMe {
+
+    // ...
+
+    modifier onlyOwner() {
+        // require(msg.sender == i_owner, unicode"你不是合约拥有者");
+        if (msg.sender != i_owner) revert FundMe__NotOwner();
+        _;
+    }
+}
+```
+
+因为这些 custom error 在 Solidity 中是非常新的用法，所以你要习惯用两种方式来写。
+
+如果你想比 require 更省 Gas 的话，你可以将所有的 require 语句都更新为 custom error。
+revert 关键字所作的事情，与之前没有判断条件时完全一样。
+
+## Solidity 进阶 - Receive & Fallback
+
+有时可以直接将 ETH 或原生通证发送给智能合约，而不执行某一个具体函数来发送通证。
+
+```solidity
+// 转账
+function fund() public payable {
+    // 1. 检查转账金额是否大于最小转账金额
+    require(
+        msg.value.getConversionRate() >= MINIMUM_USD,
+        unicode"你必须至少转账 50 USD"
+    );
+    // 2. 将捐款人添加到数组中
+    funders.push(msg.sender);
+    // 3. 将捐款金额添加到映射中
+    addressToAmountFunded[msg.sender] += msg.value;
+}
+```
+
+我们可以在不调用 fund 函数的情况下，向合约发送资金。但是，如果我这样做的话，这时会发生什么？
+
+fund 函数不被触发， 我们就无法跟踪那个 funder，我们就不会在这个合约中更新那个人的信息。因此，如果以后我们想给予奖励或什么，那就没办法在不知道的情况下给合约发送资金。我们也不能给他们任何凭证或其他东西。
+
+此外，也许他们调用了错误的函数，或者并不是使用 MetaMask，或者其他工具通知他们，这个交易会失败。
+
+在这种情况下我们能做什么呢？如果有人在没有调用 fund 函数的情况下，给个合约发送 ETH 比特币，会发生什么？
+
+在 Solidity 中有两个特殊的函数，一个叫做 receive、一个是 fallback。一个合约最多可以有一个使用 receive 函数，声明为 `receive() external payable {...}`，不需要使用 function 关键字。这个函数不能有参数并且不能返回任何东西。必须是 external 以及 payable 函数。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+contract FallbackExample {
+    uint256 public result;
+
+    receive() external payable {}
+}
+```
+
+我们不需要为 receive 添加 function 关键字，因为 Solidity 知道，receive 就是一个特殊的函数，只要我们发送 ETH 或向这个合约发送交易，只要有与该交易相关的数据，这个 receive 函数就会被触发。
+
+fallback 函数与 receive 函数非常相似，不同的是，即使数据与交易一起被发送，它也会被触发。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+contract FallbackExample {
+    uint256 public result;
+
+    receive() external payable {
+        result = 1;
+    }
+
+    fallback() external payable {
+        result = 2;
+    }
+}
+```
+
+调用逻辑如下：
+
+1. 如果 msg.data 为空，会检测 receive 函数，如果函数不存在，调用 fallback 函数，存在则直接执行 receive 函数；
+2. 如果 msg.data 不为空，则直接调用 fallback 函数。
+
+我们将其应用于我们的 FundMe 合约。
+
+```solidity
+receive() external payable {
+    fund();
+}
+
+fallback() external payable {
+    fund();
+}
+```
+
+使用 receive 和 fallback，可以记录那些不小心调用错误的函数或不小心给这个合约发送钱，而不是正确的使用 fund 函数。不过如果直接调用 fund 函数，实际会消耗更少的 Gas。
+
+## 总结
+
+迄今为止，我们已经学习了大多数 Solidity 的基础知识，下面是我们还没有学到的东西。
+
+1. Enums 枚举
+2. Events 事件
+3. Try / Catch
+4. Function Selectors 函数选择器
+5. abi.encode / decode abi 编码、解码
+6. Hashing 哈希
+7. Yul / Assumbly
+
+没有深入这些内容，是因为它们的用法比较高级，后面我们再了解它们的用途会更有意义。
+
