@@ -383,3 +383,491 @@ contract FundMe {
 
 ## 数组和结构体
 
+```solidity
+contract FundMe {
+    // 数据源
+    AggregatorV3Interface public dataFeed;
+
+    // 最小转账金额 50 USD
+    uint256 public MINIMUM_USD = 50 * 1e18;
+
+    // 捐款人
+    address[] public funders;
+    mapping(address => uint256) public addressToAmountFunded;
+
+    constructor() {
+        /**
+         * Network: Sepolia
+         * Aggregator: ETH / USD
+         * Address: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+         */
+        dataFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+    }
+
+    // 转账
+    function fund() public payable {
+        // 1. 检查转账金额是否大于最小转账金额
+        require(
+            getConversionRate(msg.value) >= MINIMUM_USD,
+            unicode"你必须至少转账 50 USD"
+        );
+        // 2. 将捐款人添加到数组中
+        funders.push(msg.sender);
+        // 3. 将捐款金额添加到映射中
+        addressToAmountFunded[msg.sender] += msg.value;
+    }
+
+    // 获取价格
+    function getPrice() public view returns (uint256) {
+        // prettier-ignore
+        (
+            /* uint80 roundId */,
+            int256 answer,
+            /*uint256 startedAt*/,
+            /*uint256 updatedAt*/,
+            /*uint80 answeredInRound*/
+        ) = dataFeed.latestRoundData();
+        // 1e10 = 10 ** 10 = 10000000000
+        // 2428618200000000000000
+        // 2428,61820000,0000000000
+        return uint256(answer * 1e10);
+    }
+}
+```
+
+和 msg.value 一样，msg.sender 也是一个全局关键字，通过这个方法，我们可以追踪所有给我们合约捐助的人。
+
+msg.value 代表有多少 ETH 或其他原生通证被发送；
+msg.sender 代表交易或组合信息的发送者，是调用这个函数的地址。
+
+除此之外，我们还可以使用很多的其他变量和函数，可以在 Solidity 文档中查看它们。
+
+当我们使用一个合约，需要 ABI 和合约地址，当编译一个接口，会给我们生成一个最小化 ABI 让我们能够和项目外的合约交互。如果将编译好的接口和地址结合起来，我们就可以调用这个合约在接口上的函数。
+
+Chainlink 喂价可以以去中心化的方式获取真实世界的信息，在上面这个案例中，我们通过一组中心化的 Chainlink 节点获取到 ETH 的 USD 价格。
+
+**Solidity** 的数学计算不能包括小数，我们要牢记这一点，还需要确保使用的单位是正确的，这样计算才有意义。
+
+## 库 Library
+
+我们现在有一些不同的函数去获取和计算价格，其实还有更简单的方式去使用它，那就是 library（库）的概念。
+
+库和智能合约类似，但是你不能声明任何静态变量，也不能发送 ETH。我们可以使用库，给不同的变量增加更多的功能性。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+library PriceConvertor {}
+```
+
+库不能有任何静态变量，也不能发送 ETH，一个库的所有函数都是 internal 的。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
+library PriceConvertor {
+    // 获取价格
+    function getPrice() internal view returns (uint256) {
+        AggregatorV3Interface dataFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+        // prettier-ignore
+        (
+            /* uint80 roundId */,
+            int256 answer,
+            /*uint256 startedAt*/,
+            /*uint256 updatedAt*/,
+            /*uint80 answeredInRound*/
+        ) = dataFeed.latestRoundData();
+        // 1e10 = 10 ** 10 = 10000000000
+        // 2428618200000000000000
+        // 2428,61820000,0000000000
+        return uint256(answer * 1e10);
+    }
+
+    // 获取版本号
+    function getVersion() internal view returns (uint256) {
+        AggregatorV3Interface dataFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+        return dataFeed.version();
+    }
+
+    // 获取转换率
+    function getConversionRate(
+        uint256 ethAmount
+    ) internal view returns (uint256) {
+        // 2428,61820000,0000000000
+        uint256 ethPrice = getPrice();
+        // 1 eth = 1 * 10 ** 18 = 1000000000000000000
+        // 1,00000000,0000000000
+        uint256 ethAmountInUsed = (ethPrice * ethAmount) / 1e18;
+        return ethAmountInUsed;
+    }
+}
+```
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+import {PriceConvertor} from "./PriceConvertor.sol";
+
+contract FundMe {
+    using PriceConvertor for uint256;
+
+    // 最小转账金额 50 USD
+    uint256 public MINIMUM_USD = 50 * 1e18;
+
+    // 捐款人
+    address[] public funders;
+    mapping(address => uint256) public addressToAmountFunded;
+
+    // 转账
+    function fund() public payable {
+        // 1. 检查转账金额是否大于最小转账金额
+        require(
+            msg.value.getConversionRate() >= MINIMUM_USD,
+            unicode"你必须至少转账 50 USD"
+        );
+        // 2. 将捐款人添加到数组中
+        funders.push(msg.sender);
+        // 3. 将捐款金额添加到映射中
+        addressToAmountFunded[msg.sender] += msg.value;
+    }
+
+    function withdraw() public {}
+}
+```
+
+将通用函数提取到外部，可以极大简化 FundMe 合约。
+
+## SafeMath, Overflow checkikng 和_unchecked_关键字
+
+
+[openzeppelin-contracts math](https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/utils/math)
+
+SafeMath.sol 是 0.8 版本之前，SafeMath 已经无处不在，但是目前的合约中几乎已经看不到它了。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+contract SafeMathTester {
+    uint8 public bigNumber = 255;
+}
+```
+
+uint8 类型变量可以设置的最大值应该是 255，也是我们能给 uint8 赋值的最大值。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+contract SafeMathTester {
+    uint8 public bigNumber = 255;
+
+    function add() public {
+        bigNumber += 1;
+    }
+}
+```
+
+当我们调用 add 函数，bigNumber 被重置为 0。
+
+在 Solidity 0.8 版本之前，无符号整型和整型是运行在 unchecked 这个概念下的，这意味着如果你超过一个数字的上限，它只会绕回去并从可能的最低数字开始。
+
+SafeMath 库，它会进行基础检查，确保不会发生上面的现象，如果你已经达到这个数字的最大值，交易将会失败。如果我们将 Solidity 版本切换至 0.8 版本，不会发生上限的问题。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+contract SafeMathTester {
+    uint8 public bigNumber = 255;
+
+    function add() public {
+        bigNumber += 1;
+    }
+}
+```
+
+在 Solidity 8.0 版本中，它们会自动检查以确保您是否要对变量执行所谓的溢出或下溢。不过我们也可以使用 unchecked 关键字恢复至 unchecked 版本。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+contract SafeMathTester {
+    uint8 public bigNumber = 255;
+
+    function add() public {
+        unchecked {
+            bigNumber += 1;
+        }
+    }
+}
+```
+
+unchecked 关键字可以让你的代码更省 gas，但是你需要确保使用的数字永远不会到达数字的上限或下限。这样的话，unchecked 关键字才是对你有意义的。
+
+## For loop
+
+for 循环是一种将某种类型的索引对象进行循环的方式将某些范围内的数字进行循环的方法。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+import {PriceConvertor} from "./PriceConvertor.sol";
+
+contract FundMe {
+    using PriceConvertor for uint256;
+
+    // 最小转账金额 50 USD
+    uint256 public MINIMUM_USD = 50 * 1e18;
+
+    // 捐款人
+    address[] public funders;
+    mapping(address => uint256) public addressToAmountFunded;
+
+    // ...
+
+    function withdraw() public {
+        for (
+            uint256 funderIndex = 0;
+            funderIndex < funders.length;
+            funderIndex++
+        ) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+    }
+}
+```
+
+## 重置数组
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+import {PriceConvertor} from "./PriceConvertor.sol";
+
+contract FundMe {
+    using PriceConvertor for uint256;
+
+    // 最小转账金额 50 USD
+    uint256 public MINIMUM_USD = 50 * 1e18;
+
+    // 捐款人
+    address[] public funders;
+    mapping(address => uint256) public addressToAmountFunded;
+
+    // ...
+
+    function withdraw() public {
+        // 1. 重置数据
+        for (
+            uint256 funderIndex = 0;
+            funderIndex < funders.length;
+            funderIndex++
+        ) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        // 2. 重置数组
+        funders = new address[](0);
+    }
+}
+```
+
+`new address[](0)` 就可以重置数组，现在 funders 已经是一个全新的数组了。
+
+我们已经重置数组，现在我们还需要从这个合约中提取资金。
+
+要想发送以太币或者其他区块链原生货币，有三种不同的方式可以使用，分别是 transfer、send、call。
+
+transfer 是最简单的，也是最直观的。
+
+```solidity
+payable(msg.sender).transfer(address(this).balance);
+```
+
+这种方法也可以用于不同合约之间互相发送代币。
+
+我们只需要把想要发送的目标地址放到 payable 关键字里，并且告诉它我们要转移多少资金。
+
+[sending-ether](https://solidity-by-example.org/sending-ether/)
+
+但是 transfer 存在一些自身的问题，存在上限 2300 gas，如果超出这个上限，就会报错。
+
+send 方法消耗上限同样也是 2300 gas。
+
+```solidity
+bool sendSuccess = payable(msg.sender).send(address(this).balance);
+require(sendSuccess, unicode"转账失败");
+```
+
+如果运行失败，通过 require 语句回滚交易。transfer 运行失败，会自动回滚交易。
+
+call 是 solidity 中实际使用的较为底层的命令，甚至不需要依赖 ABI。
+
+call 和 send 比较类似。
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.30;
+
+import {PriceConvertor} from "./PriceConvertor.sol";
+
+contract FundMe {
+    using PriceConvertor for uint256;
+
+    // 最小转账金额 50 USD
+    uint256 public MINIMUM_USD = 50 * 1e18;
+
+    // 捐款人
+    address[] public funders;
+    mapping(address => uint256) public addressToAmountFunded;
+
+    // 转账
+    function fund() public payable {
+        // 1. 检查转账金额是否大于最小转账金额
+        require(
+            msg.value.getConversionRate() >= MINIMUM_USD,
+            unicode"你必须至少转账 50 USD"
+        );
+        // 2. 将捐款人添加到数组中
+        funders.push(msg.sender);
+        // 3. 将捐款金额添加到映射中
+        addressToAmountFunded[msg.sender] += msg.value;
+    }
+
+    function withdraw() public {
+        // 1. 重置数据
+        for (
+            uint256 funderIndex = 0;
+            funderIndex < funders.length;
+            funderIndex++
+        ) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        // 2. 重置数组
+        funders = new address[](0);
+        // 3. 转账
+        // prettier-ignore
+        (
+          bool callSuccess,
+          /* bytes memory dataReturned */
+        ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        require(callSuccess, unicode"转账失败");
+    }
+}
+```
+
+目前来说，call 是最推荐的发送和接收以太币或其他区块链原生货币的方式。
+
+## 构造函数
+
+我们已经完成 withdraw 函数，但是还存在一个问题，现在无论是谁都可以从这个合约中提款。
+任何人出资，这是我们想要的，但我们并不希望随便谁都能捐款，我们只想让募集资金的人能够真正提取资金。
+
+```solidity
+// 合约拥有者
+address public owner;
+
+constructor() {
+    owner = msg.sender;
+}
+```
+
+## Modifier
+
+```solidity
+// 提取资金
+function withdraw() public {
+    // 1. 检查是否是合约拥有者
+    require(msg.sender == owner, unicode"你不是合约拥有者");
+    // 2. 重置数据
+    for (
+        uint256 funderIndex = 0;
+        funderIndex < funders.length;
+        funderIndex++
+    ) {
+        address funder = funders[funderIndex];
+        addressToAmountFunded[funder] = 0;
+    }
+    // 3. 重置数组
+    funders = new address[](0);
+    // 4. 转账
+    // prettier-ignore
+    (
+      bool callSuccess,
+      /* bytes memory dataReturned */
+    ) = payable(msg.sender).call{
+        value: address(this).balance
+    }("");
+    require(callSuccess, unicode"转账失败");
+}
+```
+
+我们通过上面这个简单操作可以保证 withdraw 函数只能被这个合约的拥有者所调用。
+
+现在假设我们有很多函数，都要求只能由合约的拥有者来调用，这时我们可以使用修饰器（Modifier）。
+
+```solidity
+modifier onlyOwner() {
+    require(msg.sender == owner, unicode"你不是合约拥有者");
+    _;
+}
+```
+
+```solidity
+// 提取资金
+function withdraw() public onlyOwner {
+    // 1. 重置数据
+    for (
+        uint256 funderIndex = 0;
+        funderIndex < funders.length;
+        funderIndex++
+    ) {
+        address funder = funders[funderIndex];
+        addressToAmountFunded[funder] = 0;
+    }
+    // 2. 重置数组
+    funders = new address[](0);
+    // 3. 转账
+    // prettier-ignore
+    (
+      bool callSuccess,
+      /* bytes memory dataReturned */
+    ) = payable(msg.sender).call{
+        value: address(this).balance
+    }("");
+    require(callSuccess, unicode"转账失败");
+}
+```
+
+这个函数声明的 onlyOwner 会在执行 withdraw 代码之前执行。
+
+现在我们已经实现了 FundMe 的所有功能，可以在测试网运行了。
