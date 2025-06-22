@@ -5,7 +5,7 @@ async function main() {
   // 1. 连接到区块链
   const provider = new ethers.JsonRpcProvider("http://127.0.0.1:7545");
   const wallet = new ethers.Wallet(
-    "0xcbb685f0c94ea9c41b0da4625258e4741222c8c16b00b3c4f12718cfafd62b0b",
+    "0x63754b678510506051d95b5ed5338e4f03b651fb22dcfd26c1a39b68a0fd68c1",
     provider
   );
 
@@ -27,7 +27,12 @@ async function main() {
   // 4. 部署合约
   const contract = await contractFactory.deploy();
 
-  console.log(contract);
+  // 5. 等待部署完成
+  await contract.waitForDeployment();
+
+  // 6. 获取合约地址
+  const contractAddress = await contract.getAddress();
+  console.log("合约部署成功！地址:", contractAddress);
 }
 
 main()
