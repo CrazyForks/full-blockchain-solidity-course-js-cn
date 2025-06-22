@@ -1,2 +1,0 @@
-# SimpleStorage Ether.js
-

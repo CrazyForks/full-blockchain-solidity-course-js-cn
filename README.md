@@ -6,11 +6,11 @@
 
 ## 内容
 
-- [01-区块链基础](./docs/01-区块链基础/README.md) - 区块链核心概念、Gas 机制、共识原理等基础知识4
-- [02-Solidity基础](./docs/02-solidity基础/README.md) - Solidity 基础类型、函数、Mappings
-- [03-Storage Factory](./docs/03-storage_factory/README.md) - Remix 部署 Storage Factory
-- [04-FundMe合约](/docs/04-FundMe合约/README.md) - Remix 部署 FundMe合约、Solidity 进阶知识
-- [05-SimleStoage Ether](/docs/05-SimpleStorage_Ether/README.md) - Ether.js 实现 SimpleStorage
+- [01-区块链基础](./src/01-区块链基础/README.md) - 区块链核心概念、Gas 机制、共识原理等基础知识4
+- [02-Solidity基础](./src/02-solidity基础/README.md) - Solidity 基础类型、函数、Mappings
+- [03-Storage Factory](./src/03-storage_factory/README.md) - Remix 部署 Storage Factory
+- [04-FundMe合约](/src/04-FundMe合约/README.md) - Remix 部署 FundMe合约、Solidity 进阶知识
+- [05-SimleStoage Ethers](/src/05-SimpleStorage_Ethers/README.md) - Ethers.js 部署 SimpleStorage
 
 ## 水龙头
 
