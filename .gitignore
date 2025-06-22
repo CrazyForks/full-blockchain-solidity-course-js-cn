@@ -2,8 +2,12 @@
 
 artifacts
 bin
+.deps
 
+.env.local
 .env
 
 node_modules
 package-lock.json
+
+dist

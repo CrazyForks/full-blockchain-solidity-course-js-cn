@@ -1,15 +1,16 @@
 {
   "name": "05-simplestorage_ethers",
   "version": "1.0.0",
-  "description": "## 软件安全、环境准备",
   "main": "deploy.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "npx solcjs --bin --abi --include-path node_modules/ --base-path . -o dist contracts/SimpleStorage.sol"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "solc": "^0.8.30"
+    "ethers": "^6.14.3",
+    "solc": "^0.8.7-fixed"
   }
 }
