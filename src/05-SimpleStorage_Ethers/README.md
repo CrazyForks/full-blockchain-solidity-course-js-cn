@@ -374,3 +374,243 @@ TransactionResponse {
 
 ## 使用 Ethers.js 与合约交互
 
+查看我们之前编译好的 abi 文件，首先将其格式化成 json 格式：
+
+```json
+[
+  {
+    "inputs": [
+      { "internalType": "string", "name": "_name", "type": "string" },
+      {
+        "internalType": "uint256",
+        "name": "_favoriteNumber",
+        "type": "uint256"
+      }
+    ],
+    "name": "addPerson",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "name": "nameToFavoriteNumber",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "people",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "favoriteNumber",
+        "type": "uint256"
+      },
+      { "internalType": "string", "name": "name", "type": "string" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "retrieve",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_favoriteNumber",
+        "type": "uint256"
+      }
+    ],
+    "name": "store",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
+```
+
+abi 或应用程序二进制接口对于我们处理合约非常重要。如果只给我们的代码（.bin）这个巨大的字节码，任何处理器都很难反编译它或理解我们定义的函数是什么。
+
+[Solidity Decompiler](https://ethervm.io/decompile)
+
+上面这个网站具具有反编译的功能，可以将一些字节码反编译成 solidity，但是并不能完全保证正确。所以，还是使用 abi 比较靠谱。
+
+当我们把这块字节码部署到区块链时，然后我们调用函数，如何函数确实存在，代码将自动允许我们调用这些函数。为了让我们代码知道它们的存在，给它提供 abi 就容易多了。
+
+```solidity
+import { ethers } from "ethers";
+
+const createContractFactory = async () => {
+  const provider = new ethers.JsonRpcProvider("http://127.0.0.1:7545");
+  const wallet = new ethers.Wallet(
+    "0x63754b678510506051d95b5ed5338e4f03b651fb22dcfd26c1a39b68a0fd68c1",
+    provider
+  );
+
+  const abi = fs.readFileSync(
+    "./dist/contracts_SimpleStorage_sol_SimpleStorage.abi",
+    "utf-8"
+  );
+  const binary = fs.readFileSync(
+    "./dist/contracts_SimpleStorage_sol_SimpleStorage.bin",
+    "utf-8"
+  );
+
+  const contractFactory = new ethers.ContractFactory(abi, binary, wallet);
+
+  return contractFactory;
+};
+
+async function main() {
+  const contractFactory = await createContractFactory();
+
+  console.log("部署合约中...");
+
+  const contract = await contractFactory.deploy();
+
+  await contract.waitForDeployment();
+
+  const contractAddress = await contract.getAddress();
+  console.log("合约部署成功！地址:", contractAddress);
+
+  const currentFavoriteNumber = await contract.retrieve();
+  console.log("当前最喜欢的数字:", currentFavoriteNumber);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+我们调用过的 retrieve 是 view 函数，不会消耗 Gas。
+
+Solidity 不能使用小数位，JavaScript 也很难处理小数，这就是为什么不使用数字类型的更具体的原因。
+
+```solidity
+async function main() {
+  const contractFactory = await createContractFactory();
+
+  console.log("部署合约中...");
+  const contract = await contractFactory.deploy();
+
+  console.log("等待合约部署完成...");
+  await contract.waitForDeployment();
+
+  const contractAddress = await contract.getAddress();
+  console.log("合约部署成功！地址:", contractAddress);
+
+  const currentFavoriteNumber = await contract.retrieve();
+  console.log("当前最喜欢的数字:", currentFavoriteNumber.toString());
+
+  const transactionResponse = await contract.store(10);
+  console.log("交易发送成功:", transactionResponse);
+
+  await transactionResponse.wait(1); // 等待交易被确认
+
+  const updatedFavoriteNumber = await contract.retrieve();
+  console.log("更新后的最喜欢的数字:", updatedFavoriteNumber.toString());
+}
+```
+
+> 交易分为两步，一个是发送交易，一个是等待区块落地，即交易回执。
+
+到目前为止，我们已经成功部署一个合约到本地的 ganache 实例。
+
+## 环境变量
+
+目前，我们与区块链的链接和私钥都存储代码中。如果我们将代码推送到 github 或其他代码仓库，会存在密钥泄露的情况。
+
+现在我们可以使用 dotenv 处理环境变量问题，首先创建一个 .env 文件。你可以用它存储敏感信息。
+
+```
+PRIVATE_KEY=0xfbbfd7b3b3d2d3ff46042ec8f3fe2dac4b253c90babe52c07d00c901df1db119
+```
+
+我们还需要安装名为 dotenv 的 npm 包
+
+```bash
+npm install dotenv --save
+```
+
+```solidity
+import { ethers } from "ethers";
+import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// ...
+
+async function main() {
+  const contractFactory = await createContractFactory();
+
+  console.log("部署合约中...");
+  const contract = await contractFactory.deploy();
+
+  console.log("等待合约部署完成...");
+  await contract.waitForDeployment();
+
+  const contractAddress = await contract.getAddress();
+  console.log("合约部署成功！地址:", contractAddress);
+
+  const currentFavoriteNumber = await contract.retrieve();
+  console.log("当前最喜欢的数字:", currentFavoriteNumber.toString());
+
+  const transactionResponse = await contract.store(10);
+  console.log("交易发送成功");
+
+  await transactionResponse.wait(1); // 等待交易被确认
+
+  const updatedFavoriteNumber = await contract.retrieve();
+  console.log("更新后的最喜欢的数字:", updatedFavoriteNumber.toString());
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
+
+```
+
+现在重新运行代码，可以看到没有任何问题。我们还可以把 RPC 端点也设置到 .env 文件中。然后在代码中使用它。
+
+```solidity
+const createContractFactory = async () => {
+  const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  // ....
+}
+```
+
+如果我们想分享我们的代码，或将代码传递到 Github，首先要使用 .gitignore 文件忽略提交 .env 文件。
+
+```
+.DS_Store
+
+artifacts
+bin
+.deps
+
+.env.local
+.env
+
+node_modules
+package-lock.json
+
+dist
+```
+
+这样我们提交的代码就不会包含 .env 文件了。
+
