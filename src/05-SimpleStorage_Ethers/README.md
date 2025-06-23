@@ -614,3 +614,130 @@ dist
 
 这样我们提交的代码就不会包含 .env 文件了。
 
+## 私钥管理
+
+如果你不想把你的私钥放在 .env 文件中，你还可以在运行脚本之前在命令行中输入。
+
+```
+RPC_URL=[your_rpc_url] RPC_PRIVATE_KEY=[your private key] node deploy.js
+```
+
+这样运行和写入 .env 文件是一样的效果。
+
+开发环境的用这样的配置就可以了，因为我们不在意这些密钥是否会被黑掉，因为没人会使用它。
+但是当我们转向更加专业的设置后，这就有点危险了。所以怎样才能让这些东西更安全呢？
+
+其实我们还可以把私钥本地加密，然后将加密后的密钥放到本地。这样的话，即使因为某些原因一些人访问我们的电脑或项目，我们的私钥也不会以明文的方式呈现，因为已经被加密过了。
+
+首先我们需要创建一个 `encryptkey.js` 文件，然后继续构建一个脚本来加密私钥。
+
+```env
+PRIVATE_KEY=[your private key]
+RPC_URL=http://127.0.0.1:7545
+
+PRIVATE_KEY_PASSWORD=password
+```
+
+```javascript
+import { ethers } from "ethers";
+import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+async function main() {
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY);
+  const encryptedJsonKey = await wallet.encrypt(
+    process.env.PRIVATE_KEY_PASSWORD
+  );
+  console.log(encryptedJsonKey);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+我们把这个脚本设置好，把我们的密钥进行一次性加密。然后我们可以从工作区的任何地方删除我们的私钥。这样它就就不再是纯文本了。
+
+```json
+{"address":"fdd5808db054a27f712a075c0d365dbc787b5450","id":"0df078e1-92b6-4e6f-93f3-58ebc7b43662","version":3,"Crypto":{"cipher":"aes-128-ctr","cipherparams":{"iv":"56ef49a1ab0f1ed882b520094632499f"},"ciphertext":"6d3a80fba009f5ba3296a1077281ce1f0e66dacf279034d33a725e4befd16ff6","kdf":"scrypt","kdfparams":{"salt":"c4b449f02be4472d6f9fa02b4ce73e6f4e0fea90fbba0e07293a298382738356","n":131072,"dklen":32,"p":1,"r":8},"mac":"c189c6296a5cf4c066b8bbbcb87e09a0d190fa81e8d9e107901c062b5467dbfb"}}
+```
+
+上面这个 JSON 对象是我们的密钥经过加密的样子，它有 id、version 以及其他的东西。上面所有的内容都是我们的密钥的加密版本。如果有人使用我们电脑，就算看到这个，也需要知道密码来解密这个私钥。
+
+```javascript
+fs.writeFileSync("./encryptedKey.json", encryptedJsonKey);
+```
+
+将它保存到本地。并在 .gitignore 忽略它。
+
+```
+.DS_Store
+
+artifacts
+bin
+.deps
+
+.env.local
+.env
+
+node_modules
+package-lock.json
+
+dist
+
+encryptedKey.json
+```
+
+现在我们可以修改我们的 deploy.js 脚本。
+
+```javascript
+import { ethers } from "ethers";
+import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const createContractFactory = async () => {
+  const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+
+  const encryptedJson = fs.readFileSync("./encryptedKey.json", "utf-8");
+  let wallet = ethers.Wallet.fromEncryptedJsonSync(
+    encryptedJson,
+    process.env.PRIVATE_KEY_PASSWORD
+  );
+  wallet = wallet.connect(provider);
+
+  const abi = fs.readFileSync(
+    "./dist/contracts_SimpleStorage_sol_SimpleStorage.abi",
+    "utf-8"
+  );
+  const binary = fs.readFileSync(
+    "./dist/contracts_SimpleStorage_sol_SimpleStorage.bin",
+    "utf-8"
+  );
+
+  const contractFactory = new ethers.ContractFactory(abi, binary, wallet);
+
+  return contractFactory;
+};
+```
+
+这样修改后，我们在 .env 文件中不需要直接使用私钥，不再是明文，而是加密后的密钥。这样，万一有人黑了我们的电脑，他们仍然无法发送新的交易，除非他们知道密码。
+
+还有一件事情，如果有人访问你的电脑，并且你之前在控制台设置过密码，在控制台输入 history，仍然可以在历史记录中看到我们之前设置的密钥，这时候需要用 `history -c` 清除历史记录。
+
+> windows 下上述命令不生效，或者安装一个 git bash，或者使用 linux 命令行。
+
+上面这些其实只是一些最基本的加密和保护你的密钥的方法，有人可能会入侵你的电脑并读取你的加密私钥和所有内容，这并不是没有可能。
+
+后续我们将继续明文的密钥进行演示，你只能使用假密钥或者测试密钥。
+
+记住，永远不要在任何地方以纯文本的形式存放你的私钥或你的助记词。
+
+## 代码格式
+

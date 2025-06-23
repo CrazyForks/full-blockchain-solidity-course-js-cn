@@ -11,3 +11,7 @@ node_modules
 package-lock.json
 
 dist
+
+encryptedKey.json
+
+.cursorrules
