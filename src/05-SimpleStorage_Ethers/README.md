@@ -739,5 +739,31 @@ const createContractFactory = async () => {
 
 记住，永远不要在任何地方以纯文本的形式存放你的私钥或你的助记词。
 
-## 代码格式
+## 部署合约（测试网、主网）
+
+我们将继续使用 Sepolia 测试网络。
+
+我们只需要一个 RPC URL 和一个私钥，就可以在区块链上开始交易。
+
+我们可以在本地搭建 [ethereum](https://github.com/ethereum/go-ethereum)，然后再连接到我们的 geth 节点。不过在这里我们会使用一个三方 RPC URL，[Alchemy](https://www.alchemy.com/)。
+
+Alchemy 具有节点即服务的功能，它允许我们连接到他们支持的任何区块链。其他备选方案有 QuickNode、Morales 或 Infura。它们都有节点及服务的功能。
+
+创建免费的测试节点，选择 ETH 链，Sepolia 网络，SDK 选择 ethers.js，替换本地的 RPC_URL，然后从 MetaMask 获取私钥，即可部署你的合约。
+
+你可能会等待一段时间，因为我们正在部署到一个测试网络，而不是本地假的区块链。测试网络和真正网络通常需要更长的时间。因为它们需要等待区块传播，以便交易能够成功完成。
+
+> address: 0x497040081aA7f18022Cf48d30C4bA7429CEA7843
+
+合约部署完成后，你可以前往 [sepolia 区块链浏览器](https://sepolia.etherscan.io/) 验证合约地址，并查看交易记录。
+
+## 通过浏览器验证合约
+
+我们可以通过浏览器，上传我们的代码验证合约，验证后效果如下：
+
+[SimpleStorage code](https://sepolia.etherscan.io/address/0x497040081aA7f18022Cf48d30C4bA7429CEA7843#code)
+
+我们并不是必须再 EtherScan 上点击按钮来验证我们的代码，我们还可以通过编程完成合约验证。
+
+## Alchemy 控制面板 & 交易池
 
