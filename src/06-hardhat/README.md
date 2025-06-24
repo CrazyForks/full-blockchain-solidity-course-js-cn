@@ -212,8 +212,129 @@ npx hardhat ignition deploy ignition/modules/SimpleStorage.js --network sepolia
 或
 
 ```bash
-npx hardhat run .\scripts\deploy.js --network sepolia
+npx hardhat run ./scripts/deploy.js --network sepolia
 ```
 
 ## 代码方式验证合约
+
+我们现在已经使用 hardhat 把合约部署到 Sepolia 上了，不过我们还没有验证合约。
+
+不过我们不必再从浏览器去验证合约了，只需要在部署脚本添加一些代码，就可以完成自动验证操作。
+
+我们实现的这个验证过程，适用于像 etherscan 这样的区块链浏览器。但可能无法在 [ethplorer](https://ethplorer.io) 或其他区块链浏览器上工作。
+
+如果你想要在其他区块浏览器上进行验证，它们会有相应的 API 供你使用。
+
+像 [etherscan](https://docs.etherscan.io) 和其他大多数区块链浏览器在它们的网站都有一个名为 API 文档的部分，它们会提供以编程与 etherscan 进行交互和操作的方式。
+
+我们可以使用 api 直接交互，或使用 hardhat 自带的扩展插件，它会使验证过程变得非常简单。
+
+这里我们使用 [hardhat-verify](https://hardhat.org/hardhat-runner/plugins/nomicfoundation-hardhat-verify) 来实现合约验证。
+
+```bash
+# 安装 hardhat-verify
+npm install --save-dev @nomicfoundation/hardhat-verify
+```
+
+hardhat.config.js 中引入插件
+
+```javascript
+require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
+require("dotenv").config();
+
+/** @type import('hardhat/config').HardhatUserConfig */
+module.exports = {
+  solidity: "0.8.28",
+  networks: {
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL,
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 11155111
+    }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
+};
+```
+
+我们还需要在 [etherscan](https://etherscan.io) 申请一个 API KEY。配置好 API KEY 后，我们只需要运行下面的命令，就可以完成合约验证。
+
+```bash
+npx hardhat verify --network sepolia
+```
+
+不过我们会让这个过程更加程序化，所以我们继续编写自定义脚本逻辑：
+
+```javascript
+const { ethers, run } = require("hardhat");
+
+async function main() {
+  const simpleStorageFactory = await ethers.getContractFactory("SimpleStorage");
+
+  console.log("Deploying contract...");
+  const simpleStorage = await simpleStorageFactory.deploy();
+
+  console.log("Waiting for deployment...");
+  await simpleStorage.waitForDeployment();
+
+  console.log("SimpleStorage deployed to:", simpleStorage.target);
+  console.log("SimpleStorage address:", await simpleStorage.getAddress());
+
+  if (network.config.chainId == 11155111 && process.env.ETHERSCAN_API_KEY) {
+    console.log("Waiting for 6 blocks...");
+    await simpleStorage.deploymentTransaction().wait(6);
+    await verify(simpleStorage.target, []);
+  }
+}
+async function verify(contractAddress, args) {
+  console.log("Verifying contract...");
+
+  try {
+    await run("verify:verify", {
+      address: contractAddress,
+      constructorArguments: args
+    });
+
+    console.log("Contract verified!");
+  } catch (error) {
+    if (error.message.toLowerCase().includes("already verified")) {
+      console.log("Contract already verified!");
+    } else {
+      console.log("Error verifying contract:", error);
+    }
+  }
+}
+
+main().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+我们使用 chainId 来区分不同网络，当我们使用本地网络时，不需要验证合约，就算验证也没有意义。
+
+好，现在我们直接使用脚本进行验证：
+
+```bash
+npx hardhat run ./scripts/deploy.js --network sepolia
+```
+
+如果你遇到 artifacts 验证有问题，可以删除掉重新运行脚本，hardhat 每次运行都会重新编译合约代码。
+
+## 通过 Hardhat 与合约交互
+
+```javascript
+const currentValue = await simpleStorage.retrieve();
+console.log("Current value is:", currentValue.toString());
+
+const transactionResponse = await simpleStorage.store(7);
+await transactionResponse.wait(1);
+
+const updatedValue = await simpleStorage.retrieve();
+console.log("Updated value is:", updatedValue.toString());
+```
+
+## 自定义 Hardhat 任务
 
