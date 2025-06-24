@@ -301,8 +301,10 @@ async function verify(contractAddress, args) {
   } catch (error) {
     if (error.message.toLowerCase().includes("already verified")) {
       console.log("Contract already verified!");
+    } else if (error.message.toLowerCase().includes("timeout")) {
+      console.log("Verification timeout, please try again later...");
     } else {
-      console.log("Error verifying contract:", error);
+      console.log("Error verifying contract:", error.message);
     }
   }
 }
@@ -322,6 +324,24 @@ npx hardhat run ./scripts/deploy.js --network sepolia
 ```
 
 如果你遇到 artifacts 验证有问题，可以删除掉重新运行脚本，hardhat 每次运行都会重新编译合约代码。
+如果遇到验证超时问题，可以修改测试网络的超时时间。
+
+```javascript
+/** @type import('hardhat/config').HardhatUserConfig */
+module.exports = {
+  solidity: "0.8.28",
+  networks: {
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL,
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 11155111,
+    }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
+};
+```
 
 ## 通过 Hardhat 与合约交互
 

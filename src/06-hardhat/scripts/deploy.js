@@ -42,8 +42,10 @@ async function verify(contractAddress, args) {
   } catch (error) {
     if (error.message.toLowerCase().includes("already verified")) {
       console.log("Contract already verified!");
+    } else if (error.message.toLowerCase().includes("timeout")) {
+      console.log("Verification timeout, please try again later...");
     } else {
-      console.log("Error verifying contract:", error);
+      console.log("Error verifying contract:", error.message);
     }
   }
 }
