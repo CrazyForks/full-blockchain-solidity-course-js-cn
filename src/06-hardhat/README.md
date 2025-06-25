@@ -358,3 +358,64 @@ console.log("Updated value is:", updatedValue.toString());
 
 ## 自定义 Hardhat 任务
 
+创建 tasks 目录，编写 `block-number.js` 文件，我们将使用它来获取当前的区块编号。
+
+```javascript
+const { task } = require("hardhat/config");
+
+task("block-number", "Prints the current block number").setAction(
+  async (taskArgs, hre) => {
+    const blockNumber = await hre.ethers.provider.getBlockNumber();
+    console.log("Current block number:", blockNumber);
+  }
+);
+```
+
+然后在配置文件中引用它。
+
+```javascript
+require("dotenv").config();
+
+require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
+require("./tasks/block-number");
+
+/** @type import('hardhat/config').HardhatUserConfig */
+module.exports = {
+  solidity: "0.8.28",
+  networks: {
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL,
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 11155111
+    }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
+};
+
+```
+
+现在运行 `npx hardhat` 就可以看到我们的自定义任务。
+
+我们可以使用 `npx hardhat block-number` 执行我们的自定义任务。
+
+```
+Current block number: 0
+```
+
+可以看到，我们可以获得区块编号为 0。这是正确的，因为我们使用的是默认网络。它每次运行后都会重置。
+
+如果我们运行 `npx hardhat block-number --network sepolia`，就会得到不一样的结果。
+
+```
+Current block number: 8626231
+```
+
+现在我们已经编写过脚本和任务，它们都可以与合约交互，并且部署智能合约。
+
+任务更适合于插件，脚本更适合用于你自己的本地开发环境。
+
+## Hardhat 本地节点
+
