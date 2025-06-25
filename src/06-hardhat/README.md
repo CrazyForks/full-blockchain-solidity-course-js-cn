@@ -262,7 +262,7 @@ module.exports = {
 我们还需要在 [etherscan](https://etherscan.io) 申请一个 API KEY。配置好 API KEY 后，我们只需要运行下面的命令，就可以完成合约验证。
 
 ```bash
-npx hardhat verify --network sepolia
+npx hardhat verify --network sepolia [your address]
 ```
 
 不过我们会让这个过程更加程序化，所以我们继续编写自定义脚本逻辑：
@@ -324,7 +324,12 @@ npx hardhat run ./scripts/deploy.js --network sepolia
 ```
 
 如果你遇到 artifacts 验证有问题，可以删除掉重新运行脚本，hardhat 每次运行都会重新编译合约代码。
-如果遇到验证超时问题，可以修改测试网络的超时时间。
+如果你遇到网络超时问题，可以设置 tun 模式全局代理，或者使用终端代理，指向你的代理地址。
+
+```bash
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+```
 
 ```javascript
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -418,4 +423,113 @@ Current block number: 8626231
 任务更适合于插件，脚本更适合用于你自己的本地开发环境。
 
 ## Hardhat 本地节点
+
+正如你所看到的，之前我们每次使用默认网络运行脚本，运行完后，那个网络就会被删除。这样我们就没办法跟合约做进一步的交互。其实有一种办法可以让我们运行一个类似使用用户界面运行的本地网络。
+
+```bash
+npx hardhat node
+```
+
+这样就可以在本地网络启动一个节点，它与 Ganache 完全相同，只不过运行在我们的终端中。
+
+这个在本地运行的网络可以指定 `--network localhost` 来使用。
+
+## Hardhat 控制台
+
+我们可以使用 `npx hardhat console --network localhost` 进行 shell 控制台。
+
+在这个 shell 控制台中，我们可以做在 deploy 脚本中做的任何事情。我们不需要任何导入动作，因为 Hardhat 里的所有包都已经在控制台被自动导入了。
+
+这个控制台适用于所有网络，不仅仅是测试网络。
+
+## 缓存清除
+
+```bash
+# 清除 artifacts 缓存
+npx hardhat clean
+```
+
+## 运行测试
+
+hardhat 最大的优点之一就是非常适合运行测试。测试环节对于你的智能合约开发至关重要，我们可能会花费大量的时间来编写良好的测试。
+
+Hardhat 测试使用的是 Mocha 框架，它是一个基于 JavaScript 的框架用于运行我们的测试。
+
+```javascript
+const {
+  loadFixture
+} = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { expect } = require("chai");
+
+describe("SimpleStorage", function () {
+  async function deploySimpleStorageFixture() {
+    const SimpleStorage = await ethers.getContractFactory("SimpleStorage");
+    const simpleStorage = await SimpleStorage.deploy();
+    return { simpleStorage };
+  }
+
+  describe("Deployment", function () {
+    it("Should set the right favoriteNumber", async function () {
+      const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+      expect(await simpleStorage.retrieve()).to.equal(0);
+    });
+
+    it("Should set the right favoriteNumber after store", async function () {
+      const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+
+      const tx = await simpleStorage.store(123);
+      await tx.wait(1);
+
+      expect(await simpleStorage.retrieve()).to.equal(123);
+    });
+  });
+
+  describe("People", function () {
+    describe("Add Person", function () {
+      it("Should add a person to the people array", async function () {
+        const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+
+        await simpleStorage.addPerson("John", 123);
+
+        const person = await simpleStorage.people(0);
+        expect(person.favoriteNumber).to.equal(123);
+      });
+
+      it("Should add a person to the people array", async function () {
+        const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+
+        await simpleStorage.addPerson("John", 123);
+        await simpleStorage.addPerson("Jane", 456);
+
+        const person = await simpleStorage.people(1);
+        expect(person.favoriteNumber).to.equal(456);
+      });
+    });
+
+    describe("NameToFavoriteNumber", function () {
+      it("Should add a person to the nameToFavoriteNumber mapping", async function () {
+        const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+
+        await simpleStorage.addPerson("John", 123);
+
+        expect(await simpleStorage.nameToFavoriteNumber("John")).to.equal(123);
+      });
+    });
+  });
+});
+```
+
+运行测试脚本
+
+```bash
+npx hardhat test
+```
+
+如果我们有很多测试，可以模糊搜索关键字进行测试：
+
+```bash
+npx hardhat test --grep store
+```
+
+## Hardhat Gas reporter
 
