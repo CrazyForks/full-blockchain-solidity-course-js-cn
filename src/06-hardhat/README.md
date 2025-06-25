@@ -531,5 +531,5 @@ npx hardhat test
 npx hardhat test --grep store
 ```
 
-## Hardhat Gas reporter
+## Hardhat Gas Reporter
 
