@@ -1,49 +1,3 @@
-# FundMe合约
-
-## Hardhat 配置
-
-```bash
-npx hardhat init
-```
-
-安装 `solhint`
-
-```bash
-npm install solhint --save-dev
-```
-
-linting 是运行一个程序的过程，该程序将分析代码是否存在潜在错误，他还会做一些格式化。
-
-ESLint 是一种对 JavaScript 代码进行 lint 的方法，sollint 是一种用于 solidity 代码的 lint 方法。
-
-初始化配置文件
-```bash
-npx solhint --init
-```
-
-```json
-{
-  "extends": "solhint:recommended"
-}
-```
-
-你可以指定文件进行 lint：
-
-```bash
-npx solhint contracts/*.sol
-```
-
-在 hardhat 项目我们可以使用 `hardhat-solhint`，它可以很方便的集成进来并使用：
-
-```bash
-npm install --save-dev @nomiclabs/hardhat-solhint
-
-npx hardhat check
-```
-
-## 引入 npm
-
-```solidity
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.28;
@@ -90,15 +44,3 @@ library PriceConvertor {
     return ethAmountInUsed;
   }
 }
-```
-
-当我们运行 `npx hardhat compile` 就会报错，因为我们找不到这个包。
-
-在 Remix 中会自动获取，在本地开发中需要自主安装：
-
-```bash
-npm i @chainlink/contracts
-```
-
-安装后，我们再次编译 solhint 代码就没有问题了。
-
