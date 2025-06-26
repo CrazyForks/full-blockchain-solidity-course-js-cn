@@ -7,8 +7,8 @@ import {PriceConvertor} from "./PriceConvertor.sol";
 contract FundMe {
   using PriceConvertor for uint256;
 
-  // 最小转账金额 50 USD
-  uint256 public MINIMUM_USD = 50 * 1e18;
+  // 最小转账金额
+  uint256 public MINIMUM_USD;
 
   // 捐款人
   address[] public funders;
@@ -17,7 +17,9 @@ contract FundMe {
   // 合约拥有者
   address public owner;
 
-  constructor() {
+  constructor(uint256 _MINIMUM_USD) {
+    MINIMUM_USD = _MINIMUM_USD;
+
     owner = msg.sender;
   }
 
