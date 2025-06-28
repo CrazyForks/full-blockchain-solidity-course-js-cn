@@ -1,0 +1,9 @@
+{
+  "description": "",
+  "scripts": {
+    "start": "http-server"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

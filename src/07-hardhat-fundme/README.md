@@ -102,3 +102,25 @@ npm i @chainlink/contracts
 
 安装后，我们再次编译 solhint 代码就没有问题了。
 
+## 项目部署
+
+之前我们使用脚本模块，创建了一个部署脚本。不过，当你使用原生 ethers 或仅仅使用 Hardhat 进行工作，仅仅使用一个部署脚本，跟踪所有部署会是一件很棘手的事情。
+
+此外，把所有部署都放到一个部署脚本中，可能会使测试和部署脚本之间无法完全兼容，还可能遇到其他比较麻烦的事情。
+
+我们可以使用一个包（[hardhat-deploy](https://rocketh.dev/hardhat-deploy/)），它会使我刚才提到的所有事情变得更容易一些。
+
+```bash
+npm i hardhat-deploy
+```
+
+```javascript
+import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-deploy";
+
+export default {
+  solidity: "0.8.28"
+};
+```
+
+未完待续。

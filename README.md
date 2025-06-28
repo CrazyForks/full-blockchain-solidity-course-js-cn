@@ -13,6 +13,7 @@
 - [05-SimleStoage Ethers](/src/05-SimpleStorage_Ethers/README.md) - Ethers.js 部署 SimpleStorage
 - [06-Hardhat](/src/06-hardhat/README.md) - Hardhat 基础使用、合约交互
 - [07-FundMe合约](/src/07-hardhat-fundme/README.md) - Hardhat 高级配置及使用
+- [08-web3钱包](/src/08-web3钱包/README.md) - Web3钱包、钱包交互
 
 ## 水龙头
 
