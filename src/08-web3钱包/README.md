@@ -80,3 +80,10 @@ checkWallet();
 
 ## 发送交易
 
+要发送一笔交易，我们需要以下内容：
+
+1. provider：用来连接到区块链
+2. signer/wallet：一个具有 gas 的人，用来发送交易
+3. contract：能够与之交互的合约
+4. abi & Address：发送地址
+

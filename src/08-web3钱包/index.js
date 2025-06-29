@@ -3,16 +3,20 @@ function updateStatus(text) {
   console.log(text);
 }
 
+function isInstalled() {
+  return !!window.ethereum;
+}
+
 async function checkWallet() {
-  if (!window.ethereum) {
-    updateStatus("MetaMask 未安装！");
-  } else {
+  if (isInstalled()) {
     updateStatus("MetaMask 已安装！");
+  } else {
+    updateStatus("MetaMask 未安装！");
   }
 }
 
 async function connectWallet() {
-  if (!window.ethereum) return;
+  if (!isInstalled()) return;
 
   try {
     const accounts = await window.ethereum.request({
@@ -27,6 +31,10 @@ async function connectWallet() {
 
     updateStatus("MetaMask 连接失败！");
   }
+}
+
+async function fund() {
+  //
 }
 
 checkWallet();
