@@ -14,6 +14,7 @@
 - [06-Hardhat](/src/06-hardhat/README.md) - Hardhat 基础使用、合约交互
 - [07-FundMe合约](/src/07-hardhat-fundme/README.md) - Hardhat 高级配置及使用
 - [08-web3钱包](/src/08-web3钱包/README.md) - Web3钱包、钱包交互
+- [09-Raffle](/src/09-Raffle/README.md) - Chainlink 技术栈整合、Raffle.sol 开发
 
 ## 水龙头
 
