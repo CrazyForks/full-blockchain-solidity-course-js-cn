@@ -2,7 +2,7 @@
 
 ## 简介
 
-基于 **Patrick Collins** 的 **JavaScript** 区块链开发课程，旨在帮助开发者掌握区块链、**Solidity** 和全栈 Web3 开发技能。课程内容涵盖从区块链基础到智能合约开发的完整知识体系。
+基于 **Patrick Collins** 的区块链开发课程编写，旨在帮助开发者掌握区块链、**Solidity** 和全栈 Web3 开发技能。课程内容涵盖从区块链基础到智能合约开发的完整知识体系。
 
 ## 内容
 
@@ -26,6 +26,8 @@
 
 - [以太坊单位转换器](https://eth-converter.com)
 - [remix-desktop-insiders](https://github.com/remix-project-org/remix-desktop-insiders/releases/tag/v1.0.8-insiders) - Remix 桌面版本 下载地址
+- [foundry开发文档](https://getfoundry.sh/introduction/getting-started)
+- [hardhat开发文档](https://hardhat.org/hardhat-runner/docs/getting-started#quick-start)
 
 ## 黑客松
 
