@@ -89,3 +89,172 @@ checkWallet();
 
 ethers CDN 地址如下：https://app.unpkg.com/ethers@5.6.0/files/dist
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3钱包、钱包交互</title>
+  </head>
+  <body>
+    <div class="container">
+      <p id="J-status"></p>
+
+      <button id="J-connectButton">连接钱包</button>
+      <button id="J-fundButton">发送交易</button>
+      <button id="J-withdrawButton">提现</button>
+    </div>
+
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
+```
+
+```javascript
+async function fund(ethAmount) {
+  if (!isInstalled()) return;
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+  const signer = provider.getSigner();
+  console.log("signer", signer);
+
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+  const transaction = await contract.fund({
+    value: ethers.utils.parseEther("0.05") // 0.05 ETH
+  });
+
+  await transaction.wait();
+
+  console.log("交易成功！");
+}
+```
+
+## 事件监听、完成交易
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3钱包、钱包交互</title>
+  </head>
+  <body>
+    <div class="container">
+      <p id="J-status"></p>
+
+      <button id="J-connectButton">连接钱包</button>
+
+      <div style="margin: 20px 0">
+        <label for="J-ethAmount">ETH</label>
+        <input type="text" id="J-ethAmount" placeholder="0.05" />
+        <button style="margin-left: 10px" id="J-fundButton">发送交易</button>
+      </div>
+
+      <button id="J-withdrawButton">提现</button>
+    </div>
+
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
+```
+
+```javascript
+async function fund() {
+  if (!isInstalled()) {
+    updateStatus("MetaMask 未安装！");
+    return;
+  }
+
+  const ethAmount = document.getElementById("J-ethAmount").value;
+  if (ethAmount === "") {
+    updateStatus("请输入金额！");
+    return;
+  }
+
+  console.log("ethAmount", ethAmount);
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    const signer = provider.getSigner();
+    console.log("signer", signer);
+
+    const contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      signer
+    );
+
+    const transaction = await contract.fund({
+      value: ethers.utils.parseEther(ethAmount) // 0.05 ETH
+    });
+
+    await lsitenForTransactionMine(transaction, provider);
+
+    updateStatus("交易成功！");
+  } catch (error) {
+    updateStatus(`交易失败！${error}`);
+  }
+}
+
+function lsitenForTransactionMine(transactionResponse, provider) {
+  updateStatus(`监听交易 ${transactionResponse.hash}...`);
+
+  return new Promise((resolve, reject) => {
+    provider.once(transactionResponse.hash, transactionReceipt => {
+      updateStatus(`交易完成！${transactionReceipt.confirmations}`);
+      resolve();
+    });
+  });
+}
+```
+
+## 读取区块链数据
+
+```javascript
+async function getBalance() {
+  if (!isInstalled()) return;
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    const balance = await provider.getBalance(CONTRACT_ADDRESS);
+
+    updateStatus(`总余额：${ethers.utils.formatEther(balance)} ETH`);
+  } catch (error) {
+    updateStatus(`查询余额失败！${error}`);
+  }
+}
+```
+
+## 提现
+
+```javascript
+async function withdraw() {
+  if (!isInstalled()) return;
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    const signer = provider.getSigner();
+
+    const contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      signer
+    );
+
+    const transaction = await contract.withdraw();
+
+    await lsitenForTransactionMine(transaction, provider);
+
+    updateStatus("提现成功！");
+  } catch (error) {
+    updateStatus(`提现失败！${error}`);
+  }
+}
+```

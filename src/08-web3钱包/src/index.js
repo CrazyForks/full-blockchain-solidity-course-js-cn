@@ -5,11 +5,13 @@ const connectButton = document.getElementById("J-connectButton");
 const fundButton = document.getElementById("J-fundButton");
 const status = document.getElementById("J-status");
 const withdrawButton = document.getElementById("J-withdrawButton");
+const balanceButton = document.getElementById("J-balanceButton");
 
 const bindEvents = () => {
   connectButton.addEventListener("click", connectWallet);
   fundButton.addEventListener("click", fund);
   withdrawButton.addEventListener("click", withdraw);
+  balanceButton.addEventListener("click", getBalance);
 };
 
 const appEntry = async () => {
@@ -55,43 +57,90 @@ async function connectWallet() {
 
     updateStatus("MetaMask 已连接！");
   } catch (error) {
-    console.log("MetaMask 请求用户账户失败！", error);
-
-    updateStatus("MetaMask 连接失败！");
+    updateStatus(`MetaMask 连接失败！${error}`);
   }
 }
 
-async function fund(ethAmount) {
+async function fund() {
+  if (!isInstalled()) rn;
+
+  const ethAmount = document.getElementById("J-ethAmount").value;
+  if (ethAmount === "") {
+    updateStatus("请输入金额！");
+    return;
+  }
+
+  console.log("ethAmount", ethAmount);
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    const signer = provider.getSigner();
+    console.log("signer", signer);
+
+    const contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      signer
+    );
+
+    const transaction = await contract.fund({
+      value: ethers.utils.parseEther(ethAmount) // 0.05 ETH
+    });
+
+    await lsitenForTransactionMine(transaction, provider);
+
+    updateStatus("交易成功！");
+  } catch (error) {
+    updateStatus(`交易失败！${error}`);
+  }
+}
+
+function lsitenForTransactionMine(transactionResponse, provider) {
+  updateStatus(`监听交易 ${transactionResponse.hash}...`);
+
+  return new Promise((resolve, reject) => {
+    provider.once(transactionResponse.hash, transactionReceipt => {
+      updateStatus(`交易完成！${transactionReceipt.confirmations}`);
+      resolve();
+    });
+  });
+}
+
+async function getBalance() {
   if (!isInstalled()) return;
 
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-  const signer = provider.getSigner();
-  console.log("signer", signer);
+    const balance = await provider.getBalance(CONTRACT_ADDRESS);
 
-  const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-  const transaction = await contract.fund({
-    value: ethers.utils.parseEther("0.05") // 0.05 ETH
-  });
-
-  await transaction.wait();
-
-  console.log("交易成功！");
+    updateStatus(`总余额：${ethers.utils.formatEther(balance)} ETH`);
+  } catch (error) {
+    updateStatus(`查询余额失败！${error}`);
+  }
 }
 
 async function withdraw() {
   if (!isInstalled()) return;
 
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-  const signer = provider.getSigner();
+    const signer = provider.getSigner();
 
-  const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    const contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      signer
+    );
 
-  const transaction = await contract.withdraw();
+    const transaction = await contract.withdraw();
 
-  await transaction.wait();
+    await lsitenForTransactionMine(transaction, provider);
 
-  console.log("提现成功！");
+    updateStatus("提现成功！");
+  } catch (error) {
+    updateStatus(`提现失败！${error}`);
+  }
 }

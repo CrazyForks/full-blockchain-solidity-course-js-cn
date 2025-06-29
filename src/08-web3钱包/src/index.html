@@ -7,10 +7,20 @@
   </head>
   <body>
     <div class="container">
+      <h1>Fund Me Dapp</h1>
+
       <p id="J-status"></p>
 
       <button id="J-connectButton">连接钱包</button>
-      <button id="J-fundButton">发送交易</button>
+
+      <div style="margin: 20px 0">
+        <label for="J-ethAmount">ETH</label>
+        <input type="text" id="J-ethAmount" placeholder="0.05" />
+        <button style="margin-left: 10px" id="J-fundButton">发送交易</button>
+      </div>
+
+      <button id="J-balanceButton">查询余额</button>
+
       <button id="J-withdrawButton">提现</button>
     </div>
 
