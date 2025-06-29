@@ -1,12 +1,15 @@
 import { ethers } from "./ethers.esm.min.js";
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from "./constants.js";
 
 const connectButton = document.getElementById("J-connectButton");
 const fundButton = document.getElementById("J-fundButton");
 const status = document.getElementById("J-status");
+const withdrawButton = document.getElementById("J-withdrawButton");
 
 const bindEvents = () => {
   connectButton.addEventListener("click", connectWallet);
   fundButton.addEventListener("click", fund);
+  withdrawButton.addEventListener("click", withdraw);
 };
 
 const appEntry = async () => {
@@ -58,4 +61,37 @@ async function connectWallet() {
   }
 }
 
-async function fund() {}
+async function fund(ethAmount) {
+  if (!isInstalled()) return;
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+  const signer = provider.getSigner();
+  console.log("signer", signer);
+
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+  const transaction = await contract.fund({
+    value: ethers.utils.parseEther("0.05") // 0.05 ETH
+  });
+
+  await transaction.wait();
+
+  console.log("交易成功！");
+}
+
+async function withdraw() {
+  if (!isInstalled()) return;
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+  const signer = provider.getSigner();
+
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+  const transaction = await contract.withdraw();
+
+  await transaction.wait();
+
+  console.log("提现成功！");
+}
