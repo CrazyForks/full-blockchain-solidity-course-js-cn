@@ -14,7 +14,7 @@
 - [06-Hardhat](/src/06-hardhat/README.md) - Hardhat 基础使用、合约交互
 - [07-FundMe合约](/src/07-hardhat-fundme/README.md) - Hardhat 高级配置及使用
 - [08-web3钱包](/src/08-web3钱包/README.md) - Web3钱包、钱包交互
-- [09-Raffle](/src/09-Raffle/README.md) - Chainlink 技术栈整合、Raffle.sol 开发
+- [09-Foundry SimleStoage](./src/09-SimleStoage_foundry/README.md) - Foundry 实现 SimleStoage
 
 ## 水龙头
 
@@ -35,6 +35,9 @@
 
 ## 参考
 
+- [foundry-full-course-cu](https://github.com/Cyfrin/foundry-full-course-cu) - foundry 全栈课程
+- [2024最新Solidity智能合约开发入门实战全课程](https://www.youtube.com/watch?v=-1GB6m39-rM&t=27848s)
+- [2024最新Solidity智能合约开发入门实战全课程-机翻](https://www.bilibili.com/video/BV15fBJYUEZq?spm_id_from=333.788.videopod.episodes&vd_source=87d2cca5f14eb84bbcdf447ccd8977eb)
 - [full-blockchain-solidity-course-js](https://github.com/smartcontractkit/full-blockchain-solidity-course-js) - 使用 JavaScript 学习区块链、Solidity 和全栈 Web3 开发
 - [32 小时最全课程区块链，智能合约 & 全栈 Web3 开发](https://www.bilibili.com/video/BV1Ca411n7ta/?spm_id_from=333.1387.homepage.video_card.click&vd_source=87d2cca5f14eb84bbcdf447ccd8977eb)
 - [Solidity官方文档](https://docs.soliditylang.org/zh-cn/latest/)
