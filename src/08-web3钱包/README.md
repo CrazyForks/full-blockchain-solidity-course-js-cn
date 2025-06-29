@@ -87,3 +87,5 @@ checkWallet();
 3. contract：能够与之交互的合约
 4. abi & Address：发送地址
 
+ethers CDN 地址如下：https://app.unpkg.com/ethers@5.6.0/files/dist
+

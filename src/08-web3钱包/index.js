@@ -1,5 +1,28 @@
+import { ethers } from "./ethers.esm.min.js";
+
+const connectButton = document.getElementById("J-connectButton");
+const fundButton = document.getElementById("J-fundButton");
+const status = document.getElementById("J-status");
+
+const bindEvents = () => {
+  connectButton.addEventListener("click", connectWallet);
+  fundButton.addEventListener("click", fund);
+};
+
+const appEntry = async () => {
+  await checkWallet();
+
+  bindEvents();
+
+  console.log("main");
+};
+
+document.addEventListener("DOMContentLoaded", appEntry);
+
+// ------------------------------------------------------------
+
 function updateStatus(text) {
-  document.getElementById("status").textContent = text;
+  status.textContent = text;
   console.log(text);
 }
 
@@ -24,6 +47,8 @@ async function connectWallet() {
     });
 
     console.log("accounts", accounts);
+    console.log("window.ethereum", window.ethereum);
+    console.log("ethers", ethers);
 
     updateStatus("MetaMask 已连接！");
   } catch (error) {
@@ -33,8 +58,4 @@ async function connectWallet() {
   }
 }
 
-async function fund() {
-  //
-}
-
-checkWallet();
+async function fund() {}
