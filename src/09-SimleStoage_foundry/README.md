@@ -127,3 +127,55 @@ libs = ["lib"]
  
 ## 编译 Foundry
 
+```bash
+forge build
+
+# or
+
+forge compile
+```
+
+这会编译我们的代码， 并输出 `abi` 到 out 目录下。
+
+## 添加自定义网络
+
+foundry 内置了一个虚拟环境在 shell 中， 如果你运行 `anvil`，会启动一个本地开发环境。并且会得到虚拟的账户和私钥。你还可以得到一个钱包助记词。
+
+我们还可以使用 [trufflesuite](https://archive.trufflesuite.com/docs/) 的 Ganache。
+Ganache 是 trufflesuite 套装的一部分，不过它正在逐步被弃用，我们更推荐使用 `anvil`。
+
+我们可以将这个地址添加到 MetaMask 的自定义网络中。
+
+> Anvil 的 ChainID 是 31337。
+
+```
+Localhost
+127.0.0.1:8545
+31337
+ETH
+```
+
+添加自定义网络后， 可以在本地网络列表看到它。不过在这个自定义网络中， 我们没有 NFT、没有活动。
+
+当然你也可以自己运行 etherum 节点，使用开源的 go-ethereum 项目进行部署。你可以去查看官网文档，使用 api 或者其他方式去连接自定义节点。
+
+## 部署合约到本地环境
+
+我们可以使用两种方式部署合约，一种是命令行的方式，运行以下命令：
+
+```bash
+forge create SimpleStorage --interactive --broadcast
+```
+
+然后输入你的 private key，就可以部署合约。
+
+你也可以指定 RPC 网络，部署合约：
+
+```bash
+forge create SimpleStorage --rpc-url http://127.0.0.1:8545 --private-key 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d --broadcast
+```
+
+不过我们很不推荐直接粘贴 private key 到 shell 中， 我们不应该让我们的私钥以明文方式存在，尤其是我们实际正在使用的私钥。
+
+如果像上面这样运行，我们可以使用 `history` 命令很轻易的获取到 private key，我们可以输入 `history -c` 清除历史记录。
+
