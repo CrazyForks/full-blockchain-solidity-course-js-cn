@@ -179,3 +179,70 @@ forge create SimpleStorage --rpc-url http://127.0.0.1:8545 --private-key 0x59c69
 
 如果像上面这样运行，我们可以使用 `history` 命令很轻易的获取到 private key，我们可以输入 `history -c` 清除历史记录。
 
+## 环境变量
+
+之前的教程中，我们使用过 dotenv 读取 env 文件，加载环境变量，现在我们不推荐这么做。 
+
+我们可以利用 foundry 内置的功能来使用私钥， 并且不以明文的方式存在。
+
+```bash
+cast wallet import defaultKey --interactive 
+```
+
+> `defaultKey` keystore was saved successfully. Address: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+
+我们可以使用 `cast wallet list` 查看已保存的密钥。另外我们还可以生成一个密钥文件进行存储，但是也不建议上传到远程仓库
+
+## 脚本部署 
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.28;
+
+import {Script} from "forge-std/Script.sol";
+import {SimpleStorage} from "../src/SimpleStorage.sol";
+
+contract DeploySimpleStorage is Script {
+  function run() external returns (SimpleStorage) {
+    vm.startBroadcast();
+    SimpleStorage simpleStorage = new SimpleStorage();
+    vm.stopBroadcast();
+    return simpleStorage;
+  }
+}
+```
+
+`vm` 是 Forge 标准库中的关键字， 也是 Foundry 中唯一可以使用的关键字。
+
+我们可以运行以下命令部署：
+
+```bash
+forge script script/DeploySimpleStorage.s.sol
+```
+
+```
+[⠊] Compiling...
+[⠔] Compiling 16 files with Solc 0.8.30
+[⠑] Solc 0.8.30 finished in 494.89ms
+Compiler run successful!
+Script ran successfully.
+Gas used: 511337
+
+== Return ==
+0: contract SimpleStorage 0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
+
+If you wish to simulate on-chain transactions pass a RPC URL.
+```
+ 
+如果我们并没有指定 RPC Url，它会自动在临时的 anvil chain 上部署你的合约或运行你的脚本。
+
+```bash
+forge script script/DeploySimpleStorage.s.sol --rpc-url 127.0.0.1:8545
+```
+
+我们还可以添加 `broadcast` 执行真正的部署操作，并添加 `private key` 指定签名交易的账户私钥，
+
+```bash
+forge script script/DeploySimpleStorage.s.sol --rpc-url 127.0.0.1:8545 --broadcast --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+```
