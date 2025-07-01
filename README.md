@@ -15,6 +15,7 @@
 - [07-FundMe合约](/src/07-hardhat-fundme/README.md) - Hardhat 高级配置及使用
 - [08-web3钱包](/src/08-web3钱包/README.md) - Web3钱包、钱包交互
 - [09-Foundry SimleStoage](./src/09-SimleStoage_foundry/README.md) - Foundry 实现 SimleStoage
+- [10-Foundry Lottery](./src/10-Lottery_foundry/README.md) - Foundry 实现 Lottery
 
 ## 水龙头
 
